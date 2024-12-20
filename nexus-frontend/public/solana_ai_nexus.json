@@ -1,0 +1,700 @@
+{
+  "version": "0.1.0",
+  "name": "solana_ai_nexus",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "registerAgent",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "agent",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "metadataUri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "createTask",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "reward",
+          "type": "u64"
+        },
+        {
+          "name": "deadline",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "assignTask",
+      "accounts": [
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "agent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "agentId",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "completeTask",
+      "accounts": [
+        {
+          "name": "task",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "agent",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "resultUri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "stakeTokens",
+      "accounts": [
+        {
+          "name": "staker",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "userTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updateReputation",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "agent",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "agentId",
+          "type": "u64"
+        },
+        {
+          "name": "scoreDelta",
+          "type": "i32"
+        }
+      ]
+    },
+    {
+      "name": "pauseProtocol",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "validateTransaction",
+      "accounts": [
+        {
+          "name": "transaction",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "State",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "agentCount",
+            "type": "u64"
+          },
+          {
+            "name": "taskCount",
+            "type": "u64"
+          },
+          {
+            "name": "isPaused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Agent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "metadataUri",
+            "type": "string"
+          },
+          {
+            "name": "reputationScore",
+            "type": "u32"
+          },
+          {
+            "name": "tasksCompleted",
+            "type": "u32"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Task",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "agentId",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "reward",
+            "type": "u64"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "TaskStatus"
+            }
+          },
+          {
+            "name": "resultUri",
+            "type": {
+              "option": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Transaction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "slippage",
+            "type": "u64"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "EventSeverity",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Info"
+          },
+          {
+            "name": "Warning"
+          },
+          {
+            "name": "Error"
+          },
+          {
+            "name": "Critical"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SystemStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Healthy"
+          },
+          {
+            "name": "Degraded"
+          },
+          {
+            "name": "Critical"
+          },
+          {
+            "name": "Maintenance"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TaskStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "InProgress"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "StakeEvent",
+      "fields": [
+        {
+          "name": "staker",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "ReputationUpdateEvent",
+      "fields": [
+        {
+          "name": "agentId",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "oldScore",
+          "type": "u32",
+          "index": false
+        },
+        {
+          "name": "newScore",
+          "type": "u32",
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "ProposalCreatedEvent",
+      "fields": [
+        {
+          "name": "proposalId",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "proposer",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "VoteEvent",
+      "fields": [
+        {
+          "name": "proposalId",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "voter",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "voteFor",
+          "type": "bool",
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "AnalyticsEvent",
+      "fields": [
+        {
+          "name": "eventType",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "UpgradeEvent",
+      "fields": [
+        {
+          "name": "version",
+          "type": "u32",
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "SystemEvent",
+      "fields": [
+        {
+          "name": "eventType",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "severity",
+          "type": {
+            "defined": "EventSeverity"
+          },
+          "index": false
+        },
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        },
+        {
+          "name": "details",
+          "type": "string",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "SystemHealthEvent",
+      "fields": [
+        {
+          "name": "timestamp",
+          "type": "i64",
+          "index": false
+        },
+        {
+          "name": "status",
+          "type": {
+            "defined": "SystemStatus"
+          },
+          "index": false
+        },
+        {
+          "name": "errorRate",
+          "type": "u32",
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AgentNotActive",
+      "msg": "Agent is not active"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidTaskStatus",
+      "msg": "Invalid task status"
+    },
+    {
+      "code": 6002,
+      "name": "InsufficientStake",
+      "msg": "Insufficient stake"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidReputationScore",
+      "msg": "Invalid reputation score"
+    },
+    {
+      "code": 6004,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6005,
+      "name": "ProposalExists",
+      "msg": "Proposal already exists"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidProposalStatus",
+      "msg": "Invalid proposal status"
+    },
+    {
+      "code": 6007,
+      "name": "RateLimitExceeded",
+      "msg": "Rate limit exceeded"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidUpgrade",
+      "msg": "Invalid upgrade"
+    },
+    {
+      "code": 6009,
+      "name": "CacheExpired",
+      "msg": "Cache expired"
+    },
+    {
+      "code": 6010,
+      "name": "MaxRecoveryAttemptsExceeded",
+      "msg": "Maximum recovery attempts exceeded"
+    },
+    {
+      "code": 6011,
+      "name": "SuspiciousActivity",
+      "msg": "Suspicious activity detected"
+    },
+    {
+      "code": 6012,
+      "name": "AddressBlocked",
+      "msg": "Address is blocked"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidResponseFormat",
+      "msg": "Invalid response format"
+    },
+    {
+      "code": 6014,
+      "name": "TransactionExpired",
+      "msg": "Transaction expired"
+    },
+    {
+      "code": 6015,
+      "name": "SlippageExceeded",
+      "msg": "Slippage exceeded"
+    }
+  ],
+  "metadata": {
+    "address": "6gT2Yv1C1RdgN8ABQrbQ9dzzMbKVjLtRJ45ziSkN6nZc"
+  }
+}

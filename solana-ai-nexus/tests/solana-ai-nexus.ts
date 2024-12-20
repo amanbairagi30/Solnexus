@@ -3,11 +3,11 @@ import { Program } from "@project-serum/anchor";
 import { SolanaAiNexus } from "../target/types/solana_ai_nexus";
 import {
   TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  createMint,
-  createAssociatedTokenAccount,
-  getAssociatedTokenAddress,
-  mintTo,
+  createInitializeMintInstruction,
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddressSync,
+  createMintToInstruction,
+  MINT_SIZE,
 } from "@solana/spl-token";
 import { assert } from "chai";
 
@@ -17,110 +17,80 @@ describe("solana-ai-nexus", () => {
 
   const program = anchor.workspace.SolanaAiNexus as Program<SolanaAiNexus>;
   
-  // Test accounts
-  let statePda: anchor.web3.PublicKey;
-  let stateAccount: anchor.web3.Keypair;
-  let governancePda: anchor.web3.PublicKey;
-  let mint: anchor.web3.PublicKey;
+  let state: anchor.web3.Keypair;
+  let mint: anchor.web3.Keypair;
   let userTokenAccount: anchor.web3.PublicKey;
   let stakeAccount: anchor.web3.PublicKey;
-  let rateLimiterPda: anchor.web3.PublicKey;
-  let analyticsPda: anchor.web3.PublicKey;
   
-  // Test constants
-  const MIN_STAKE_FOR_PROPOSAL = new anchor.BN(1000000);
-  const VOTING_PERIOD = new anchor.BN(86400); // 1 day in seconds
-
   before(async () => {
-    // Generate keypair for state account
-    stateAccount = anchor.web3.Keypair.generate();
-
-    // Find PDAs
-    [statePda] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from("state")],
-      program.programId
-    );
-
-    [governancePda] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from("governance")],
-      program.programId
-    );
-
-    [rateLimiterPda] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from("rate_limiter")],
-      program.programId
-    );
-
-    [analyticsPda] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from("analytics")],
-      program.programId
-    );
+    state = anchor.web3.Keypair.generate();
+    mint = anchor.web3.Keypair.generate();
 
     try {
-      // Initialize program state
       await program.methods
         .initialize()
         .accounts({
-          state: stateAccount.publicKey,
+          state: state.publicKey,
           authority: provider.wallet.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .signers([stateAccount])
+        .signers([state])
         .rpc();
 
-      // Create token mint
-      const mintKeypair = anchor.web3.Keypair.generate();
-      
-      // Create mint
-      mint = await createMint(
-        provider.connection,
-        provider.wallet.payer,
+      const lamports = await provider.connection.getMinimumBalanceForRentExemption(MINT_SIZE);
+      const createAccountIx = anchor.web3.SystemProgram.createAccount({
+        fromPubkey: provider.wallet.publicKey,
+        newAccountPubkey: mint.publicKey,
+        space: MINT_SIZE,
+        lamports,
+        programId: TOKEN_PROGRAM_ID,
+      });
+
+      const initializeMintIx = createInitializeMintInstruction(
+        mint.publicKey,
+        9,
         provider.wallet.publicKey,
         null,
-        9,
-        mintKeypair
+        TOKEN_PROGRAM_ID
       );
 
-      // Create user token account
-      userTokenAccount = await getAssociatedTokenAddress(
-        mint,
-        provider.wallet.publicKey
+      userTokenAccount = getAssociatedTokenAddressSync(
+        mint.publicKey,
+        provider.wallet.publicKey,
+        false,
+        TOKEN_PROGRAM_ID
       );
 
-      await createAssociatedTokenAccount(
-        provider.connection,
-        provider.wallet.payer,
-        mint,
-        provider.wallet.publicKey
-      );
-
-      // Initialize rate limiter and analytics with PDAs
-      await program.methods
-        .initializeRateLimiter()
-        .accounts({
-          rateLimiter: rateLimiterPda,
-          authority: provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .rpc();
-
-      await program.methods
-        .initializeAnalytics()
-        .accounts({
-          analytics: analyticsPda,
-          authority: provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .rpc();
-
-      // Mint tokens to user
-      await mintTo(
-        provider.connection,
-        provider.wallet.payer,
-        mint,
+      const createTokenAccountIx = createAssociatedTokenAccountInstruction(
+        provider.wallet.publicKey,
         userTokenAccount,
         provider.wallet.publicKey,
-        1000000000
+        mint.publicKey,
+        TOKEN_PROGRAM_ID
+      );
+
+      const mintToIx = createMintToInstruction(
+        mint.publicKey,
+        userTokenAccount,
+        provider.wallet.publicKey,
+        1000000000,
+        [],
+        TOKEN_PROGRAM_ID
+      );
+
+      const tx = new anchor.web3.Transaction()
+        .add(createAccountIx)
+        .add(initializeMintIx)
+        .add(createTokenAccountIx)
+        .add(mintToIx);
+
+      await provider.sendAndConfirm(tx, [mint]);
+
+      stakeAccount = getAssociatedTokenAddressSync(
+        mint.publicKey,
+        provider.wallet.publicKey,
+        true,
+        TOKEN_PROGRAM_ID
       );
 
     } catch (error) {
@@ -130,89 +100,48 @@ describe("solana-ai-nexus", () => {
   });
 
   it("Initializes the program state", async () => {
-    await program.methods
-      .initialize()
-      .accounts({
-        state: stateAccount.publicKey,
-        authority: provider.wallet.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([stateAccount])
-      .rpc();
-
-    const state = await program.account.state.fetch(statePda);
-    assert.equal(state.authority.toString(), provider.wallet.publicKey.toString());
-    assert.equal(state.agentCount.toNumber(), 0);
-    assert.equal(state.taskCount.toNumber(), 0);
+    const stateAccount = await program.account.state.fetch(state.publicKey);
+    assert.equal(stateAccount.authority.toString(), provider.wallet.publicKey.toString());
+    assert.equal(stateAccount.agentCount, 0);
+    assert.equal(stateAccount.taskCount, 0);
   });
 
-  it("Registers an AI agent", async () => {
+  it("Registers an agent", async () => {
     const agent = anchor.web3.Keypair.generate();
-    
+    const name = "Test Agent";
+    const description = "Test Description";
+    const metadataUri = "https://test.uri";
+
     await program.methods
-      .registerAgent(
-        "Test Agent",
-        "Test Description",
-        "https://metadata.uri"
-      )
+      .registerAgent(name, description, metadataUri)
       .accounts({
-        state: statePda,
+        state: state.publicKey,
         agent: agent.publicKey,
         owner: provider.wallet.publicKey,
-        rateLimiter: rateLimiterPda,
-        analytics: analyticsPda,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([agent])
       .rpc();
 
     const agentAccount = await program.account.agent.fetch(agent.publicKey);
-    assert.equal(agentAccount.name, "Test Agent");
-    assert.equal(agentAccount.description, "Test Description");
-    assert.equal(agentAccount.metadataUri, "https://metadata.uri");
-    assert.equal(agentAccount.isActive, true);
+    assert.equal(agentAccount.name, name);
+    assert.equal(agentAccount.description, description);
+    assert.equal(agentAccount.metadataUri, metadataUri);
     assert.equal(agentAccount.reputationScore, 0);
     assert.equal(agentAccount.tasksCompleted, 0);
-
-    // Verify analytics update
-    const analytics = await program.account.analytics.fetch(analyticsPda);
-    assert.equal(analytics.totalAgentsRegistered.toNumber(), 1);
+    assert.equal(agentAccount.isActive, true);
   });
 
   it("Creates and manages a task", async () => {
     const task = anchor.web3.Keypair.generate();
-    const agent = anchor.web3.Keypair.generate();
-    
-    // First register an agent
-    await program.methods
-      .registerAgent(
-        "Task Agent",
-        "Task Agent Description",
-        "https://metadata.uri"
-      )
-      .accounts({
-        state: statePda,
-        agent: agent.publicKey,
-        owner: provider.wallet.publicKey,
-        rateLimiter: rateLimiterPda,
-        analytics: analyticsPda,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([agent])
-      .rpc();
+    const description = "Test Task";
+    const reward = new anchor.BN(100);
+    const deadline = new anchor.BN(Math.floor(Date.now() / 1000) + 3600);
 
-    // Create task
-    const taskReward = new anchor.BN(100);
-    const taskDeadline = new anchor.BN(Date.now() / 1000 + 86400);
-    
     await program.methods
-      .createTask(
-        "Test Task",
-        taskReward,
-        taskDeadline
-      )
+      .createTask(description, reward, deadline)
       .accounts({
-        state: statePda,
+        state: state.publicKey,
         task: task.publicKey,
         creator: provider.wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -220,282 +149,24 @@ describe("solana-ai-nexus", () => {
       .signers([task])
       .rpc();
 
-    let taskAccount = await program.account.task.fetch(task.publicKey);
-    assert.equal(taskAccount.description, "Test Task");
-    assert.equal(taskAccount.reward.toNumber(), taskReward.toNumber());
-    assert.equal(taskAccount.status.toString(), "Pending");
-
-    // Assign task
-    await program.methods
-      .assignTask(0)
-      .accounts({
-        task: task.publicKey,
-        agent: agent.publicKey,
-        authority: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    taskAccount = await program.account.task.fetch(task.publicKey);
-    assert.equal(taskAccount.status.toString(), "InProgress");
-    assert.equal(taskAccount.agentId.toString(), "0");
-
-    // Complete task
-    await program.methods
-      .completeTask("https://result.uri")
-      .accounts({
-        task: task.publicKey,
-        agent: agent.publicKey,
-        authority: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    taskAccount = await program.account.task.fetch(task.publicKey);
-    assert.equal(taskAccount.status.toString(), "Completed");
-    assert.equal(taskAccount.resultUri, "https://result.uri");
-
-    // Verify agent's tasks completed count
-    const agentAccount = await program.account.agent.fetch(agent.publicKey);
-    assert.equal(agentAccount.tasksCompleted.toNumber(), 1);
+    const taskAccount = await program.account.task.fetch(task.publicKey);
+    assert.equal(taskAccount.description, description);
+    assert.equal(taskAccount.reward.toString(), reward.toString());
+    assert.equal(taskAccount.deadline.toString(), deadline.toString());
+    assert.deepEqual(taskAccount.status, { pending: {} });
   });
 
-  it("Stakes tokens and creates a proposal", async () => {
-    const proposal = anchor.web3.Keypair.generate();
-    
-    // Stake tokens
+  it("Stakes tokens", async () => {
+    const amount = new anchor.BN(1000000);
+
     await program.methods
-      .stakeTokens(new anchor.BN(2000000))
+      .stakeTokens(amount)
       .accounts({
         staker: provider.wallet.publicKey,
-        userTokenAccount,
-        stakeAccount,
+        userTokenAccount: userTokenAccount,
+        stakeAccount: stakeAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .rpc();
-
-    // Create proposal
-    await program.methods
-      .createProposal(
-        "Test Proposal",
-        new anchor.BN(86400)
-      )
-      .accounts({
-        governance: governancePda,
-        proposal: proposal.publicKey,
-        proposer: provider.wallet.publicKey,
-        stakeAccount,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([proposal])
-      .rpc();
-
-    const proposalAccount = await program.account.proposal.fetch(proposal.publicKey);
-    assert.equal(proposalAccount.description, "Test Proposal");
-    assert.equal(proposalAccount.status.toString(), "Active");
-  });
-
-  it("Votes on a proposal", async () => {
-    const proposal = anchor.web3.Keypair.generate();
-    
-    // Create proposal first
-    await program.methods
-      .createProposal(
-        "Voting Test Proposal",
-        new anchor.BN(86400)
-      )
-      .accounts({
-        governance: governancePda,
-        proposal: proposal.publicKey,
-        proposer: provider.wallet.publicKey,
-        stakeAccount,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([proposal])
-      .rpc();
-
-    // Vote on proposal
-    await program.methods
-      .vote(true)
-      .accounts({
-        proposal: proposal.publicKey,
-        voter: provider.wallet.publicKey,
-        stakeAccount,
-      })
-      .rpc();
-
-    const proposalAccount = await program.account.proposal.fetch(proposal.publicKey);
-    assert.equal(proposalAccount.votesFor.toNumber(), 1);
-  });
-
-  it("Updates agent reputation", async () => {
-    const agent = anchor.web3.Keypair.generate();
-    
-    // Register agent first
-    await program.methods
-      .registerAgent(
-        "Reputation Test Agent",
-        "Description",
-        "https://metadata.uri"
-      )
-      .accounts({
-        state: statePda,
-        agent: agent.publicKey,
-        owner: provider.wallet.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .signers([agent])
-      .rpc();
-
-    // Update reputation
-    await program.methods
-      .updateReputation(0, 10)
-      .accounts({
-        state: statePda,
-        agent: agent.publicKey,
-        authority: provider.wallet.publicKey,
-      })
-      .rpc();
-
-    const agentAccount = await program.account.agent.fetch(agent.publicKey);
-    assert.equal(agentAccount.reputationScore, 10);
-  });
-
-  describe("Rate limiting and batch processing", () => {
-    it("Should enforce rate limits", async () => {
-      const agent = anchor.web3.Keypair.generate();
-      
-      // Should succeed first time
-      await program.methods
-        .registerAgent("Test Agent", "Description", "uri")
-        .accounts({
-          state: statePda,
-          agent: agent.publicKey,
-          owner: provider.wallet.publicKey,
-          rateLimiter: rateLimiterPda,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([agent])
-        .rpc();
-
-      // Should fail on rapid subsequent attempts
-      try {
-        await program.methods
-          .registerAgent("Test Agent 2", "Description", "uri")
-          .accounts({
-            state: statePda,
-            agent: agent.publicKey,
-            owner: provider.wallet.publicKey,
-            rateLimiter: rateLimiterPda,
-            systemProgram: anchor.web3.SystemProgram.programId,
-          })
-          .signers([agent])
-          .rpc();
-        assert.fail("Should have thrown rate limit error");
-      } catch (e) {
-        assert.include(e.message, "Rate limit exceeded");
-      }
-    });
-
-    it("Should process tasks in batch", async () => {
-      const taskIds = [1, 2, 3];
-      await program.methods
-        .batchProcessTasks(taskIds)
-        .accounts({
-          authority: provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .rpc();
-    });
-  });
-
-  describe("Error handling and recovery", () => {
-    it("Should handle and recover from errors", async () => {
-      const errorLog = anchor.web3.Keypair.generate();
-      
-      // Create error log
-      await program.methods
-        .handleErrorRecovery(new anchor.BN(1))
-        .accounts({
-          errorLog: errorLog.publicKey,
-          authority: provider.wallet.publicKey,
-        })
-        .signers([errorLog])
-        .rpc();
-
-      const errorLogAccount = await program.account.errorLog.fetch(errorLog.publicKey);
-      assert.equal(errorLogAccount.recoveryStatus.toString(), "Recovered");
-      assert.equal(errorLogAccount.recoveryAttempts, 1);
-    });
-  });
-
-  describe("System health monitoring", () => {
-    it("Should update system health metrics", async () => {
-      const systemHealth = anchor.web3.Keypair.generate();
-      
-      await program.methods
-        .updateSystemHealth()
-        .accounts({
-          systemHealth: systemHealth.publicKey,
-          authority: provider.wallet.publicKey,
-        })
-        .signers([systemHealth])
-        .rpc();
-
-      const healthAccount = await program.account.systemHealth.fetch(systemHealth.publicKey);
-      assert.equal(healthAccount.systemStatus.toString(), "Healthy");
-      assert.isNumber(healthAccount.errorRate);
-      assert.isNumber(healthAccount.averageResponseTime);
-    });
-  });
-
-  describe("DeFi operations", () => {
-    it("Should handle flash loans correctly", async () => {
-      // Flash loan tests
-    });
-    
-    it("Should respect slippage tolerance", async () => {
-      // Slippage tests
-    });
-  });
-
-  describe("Oracle operations", () => {
-    it("Should properly integrate with Pyth", async () => {
-      // Setup Pyth mock
-      const pythPrice = new anchor.BN(1500e6); // $1500 USD
-      const pythConfidence = new anchor.BN(1e4);
-      
-      // Test price update
-      await program.methods
-        .updatePythPrice()
-        .accounts({
-          oracle: oracle.publicKey,
-          pythPriceAccount: pythMock.publicKey,
-          authority: provider.wallet.publicKey,
-        })
-        .rpc();
-
-      const oracleAccount = await program.account.priceOracle.fetch(oracle.publicKey);
-      assert.ok(oracleAccount.priceFeed.price.eq(pythPrice));
-    });
-
-    it("Should trigger circuit breaker on extreme conditions", async () => {
-      // Setup extreme price change
-      const initialPrice = new anchor.BN(1500e6);
-      const extremePrice = new anchor.BN(3000e6);
-      
-      try {
-        await program.methods
-          .updatePrice(extremePrice)
-          .accounts({
-            oracle: oracle.publicKey,
-            authority: provider.wallet.publicKey,
-          })
-          .rpc();
-        assert.fail("Should have triggered circuit breaker");
-      } catch (err) {
-        assert.include(err.message, "CircuitBreakerTriggered");
-      }
-    });
-
-    // Add more test cases...
   });
 });

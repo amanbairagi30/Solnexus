@@ -2,14 +2,14 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-solana_ai_nexus = "4zDxXREBd1irbagc7gvuaxHdfeYamiudBtoe8XbXuY9q"
+solana_ai_nexus = "6gT2Yv1C1RdgN8ABQrbQ9dzzMbKVjLtRJ45ziSkN6nZc"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "localnet"
-wallet = "./program-keypair.json"
+wallet = "./deploy-keypair.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
