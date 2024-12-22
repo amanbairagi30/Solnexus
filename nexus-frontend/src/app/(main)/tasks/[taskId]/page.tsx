@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useAnchorClient } from '../../../hooks/useAnchorClient';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-import { useParams } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useAnchorClient } from "../../../../hooks/useAnchorClient";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { useParams } from "next/navigation";
 
 interface Task {
   creator: PublicKey;
@@ -12,7 +12,7 @@ interface Task {
   reward: number;
   deadline: number;
   assignedAgent: PublicKey | null;
-  status: 'Open' | 'Assigned' | 'Completed';
+  status: "Open" | "Assigned" | "Completed";
   resultUri: string | null;
 }
 
@@ -23,7 +23,7 @@ export default function TaskDetailsPage() {
   const { connected, publicKey } = useWallet();
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
-  const [resultUri, setResultUri] = useState('');
+  const [resultUri, setResultUri] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function TaskDetailsPage() {
           setTask(result.task as unknown as Task);
         }
       } catch (error) {
-        console.error('Error fetching task:', error);
+        console.error("Error fetching task:", error);
       } finally {
         setLoading(false);
       }
@@ -64,10 +64,10 @@ export default function TaskDetailsPage() {
         if (updatedTask.success && updatedTask.task) {
           setTask(updatedTask.task as unknown as Task);
         }
-        setResultUri('');
+        setResultUri("");
       }
     } catch (error) {
-      console.error('Error completing task:', error);
+      console.error("Error completing task:", error);
     } finally {
       setSubmitting(false);
     }
@@ -98,7 +98,7 @@ export default function TaskDetailsPage() {
   }
 
   const isAssignedToMe = task.assignedAgent?.equals(publicKey!);
-  const canComplete = task.status === 'Assigned' && isAssignedToMe;
+  const canComplete = task.status === "Assigned" && isAssignedToMe;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -107,9 +107,11 @@ export default function TaskDetailsPage() {
           <h1 className="text-3xl font-bold">{task.description}</h1>
           <span
             className={`px-4 py-2 rounded text-sm ${
-              task.status === 'Open' ? 'bg-green-600' :
-              task.status === 'Assigned' ? 'bg-yellow-600' :
-              'bg-blue-600'
+              task.status === "Open"
+                ? "bg-green-600"
+                : task.status === "Assigned"
+                ? "bg-yellow-600"
+                : "bg-blue-600"
             }`}
           >
             {task.status}
@@ -119,7 +121,9 @@ export default function TaskDetailsPage() {
         <div className="grid grid-cols-2 gap-6 mb-8">
           <div>
             <h3 className="text-gray-400 mb-2">Reward</h3>
-            <p className="text-xl font-semibold">{task.reward.toString()} SOL</p>
+            <p className="text-xl font-semibold">
+              {task.reward.toString()} SOL
+            </p>
           </div>
           <div>
             <h3 className="text-gray-400 mb-2">Deadline</h3>
@@ -134,7 +138,9 @@ export default function TaskDetailsPage() {
           {task.assignedAgent && (
             <div>
               <h3 className="text-gray-400 mb-2">Assigned Agent</h3>
-              <p className="text-sm font-mono">{task.assignedAgent.toString()}</p>
+              <p className="text-sm font-mono">
+                {task.assignedAgent.toString()}
+              </p>
             </div>
           )}
         </div>
@@ -144,7 +150,9 @@ export default function TaskDetailsPage() {
             <h3 className="text-xl font-semibold mb-4">Complete Task</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Result URI</label>
+                <label className="block text-sm font-medium mb-2">
+                  Result URI
+                </label>
                 <input
                   type="text"
                   value={resultUri}
@@ -158,11 +166,11 @@ export default function TaskDetailsPage() {
                 disabled={submitting || !resultUri}
                 className={`w-full py-3 px-4 rounded font-medium ${
                   submitting || !resultUri
-                    ? 'bg-blue-600 cursor-not-allowed'
-                    : 'bg-blue-500 hover:bg-blue-600'
+                    ? "bg-blue-600 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600"
                 }`}
               >
-                {submitting ? 'Submitting...' : 'Complete Task'}
+                {submitting ? "Submitting..." : "Complete Task"}
               </button>
             </div>
           </div>

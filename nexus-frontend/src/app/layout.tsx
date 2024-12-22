@@ -1,13 +1,17 @@
-import { Inter } from 'next/font/google';
-import './globals.css';
-import ClientLayout from '@/components/ClientLayout';
-import Link from 'next/link';
+import { Inter, Manrope } from "next/font/google";
+import "./globals.css";
+import ClientLayout from "@/components/ClientLayout";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Button } from "@/components/ui/button";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata = {
-  title: 'Solana AI Nexus',
-  description: 'A decentralized AI agent marketplace on Solana',
+  title: "Solana AI Nexus",
+  description: "A decentralized AI agent marketplace on Solana",
 };
 
 export default function RootLayout({
@@ -17,27 +21,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ClientLayout>
-          <div className="min-h-screen bg-gray-900 text-white">
-            <nav className="bg-gray-800 p-4">
-              <div className="container mx-auto flex justify-between items-center">
-                <Link href="/" className="text-xl font-bold">
-                  Nexus AI
-                </Link>
-                <div className="space-x-4">
-                  <Link href="/dashboard" className="hover:text-gray-300">
-                    Dashboard
-                  </Link>
-                  <Link href="/test" className="hover:text-gray-300">
-                    Test Features
-                  </Link>
-                </div>
-              </div>
-            </nav>
-            {children}
-          </div>
-        </ClientLayout>
+      <body
+        className={cn(
+          inter.variable,
+          manrope.variable,
+          "bg-background text-foreground font-primary"
+        )}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClientLayout>{children}</ClientLayout>
+        </ThemeProvider>
       </body>
     </html>
   );
