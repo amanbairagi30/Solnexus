@@ -17,12 +17,85 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgb(var(--background-end-rgb))
-  )
-  rgb(var(--background-start-rgb));
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 217 0% 95%;
+    --foreground: 217 0% 8%;
+    --card: 217 0% 90%;
+    --card-foreground: 217 0% 10%;
+    --popover: 217 0% 95%;
+    --popover-foreground: 217 95% 8%;
+    --primary: 217 100% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 10% 70%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 179 10% 85%;
+    --muted-foreground: 217 0% 35%;
+    --accent: 179 10% 80%;
+    --accent-foreground: 217 0% 10%;
+    --destructive: 0 50% 30%;
+    --destructive-foreground: 217 0% 90%;
+    --border: 217 20% 50%;
+    --input: 217 20% 18%;
+    --ring: 217 100% 51%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    --background: 217 10% 8%;
+    --foreground: 217 0% 90%;
+    --card: 217 0% 8%;
+    --card-foreground: 217 0% 90%;
+    --popover: 217 10% 5%;
+    --popover-foreground: 217 0% 90%;
+    --primary: 217 100% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 10% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 179 10% 15%;
+    --muted-foreground: 217 0% 60%;
+    --accent: 179 10% 15%;
+    --accent-foreground: 217 0% 90%;
+    --destructive: 0 50% 30%;
+    --destructive-foreground: 217 0% 90%;
+    --border: 217 20% 18%;
+    --input: 217 20% 18%;
+    --ring: 217 100% 51%;
+    --radius: 0.5rem;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+.wallet-adapter-button {
+  @apply bg-gradient-to-tr text-sm rounded-lg px-6 py-5 h-0 font-primary from-primary via-[#0565ff] to-cyan-300;
+}
+
+.wallet-adapter-dropdown-list {
+  @apply bg-background font-primary backdrop-blur-lg;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
