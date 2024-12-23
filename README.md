@@ -1,4 +1,4 @@
-# Solana AI Nexus Frontend
+# Solana AI Nexus Frontend & contract 
 
 ## Project Overview
 The Solana AI Nexus is a cutting-edge platform designed to empower users in the Solana ecosystem by providing seamless interaction with AI agents. This project aims to simplify the management of digital assets and enhance user engagement through innovative solutions.
