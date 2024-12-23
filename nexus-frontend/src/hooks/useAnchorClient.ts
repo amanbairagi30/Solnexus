@@ -1,6 +1,7 @@
-import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
+import { useConnection, useAnchorWallet } from '@solana/wallet-adapter-react';
+import { AnchorClient } from '../client/anchor-client';
 import { useEffect, useState } from 'react';
-import { AnchorClient } from '../utils/anchor-client';
+import { Wallet } from '@project-serum/anchor';
 
 export function useAnchorClient() {
   const { connection } = useConnection();
@@ -8,13 +9,17 @@ export function useAnchorClient() {
   const [client, setClient] = useState<AnchorClient | null>(null);
 
   useEffect(() => {
-    if (wallet) {
-      const newClient = new AnchorClient(connection, wallet);
-      setClient(newClient);
+    if (wallet && connection) {
+      try {
+        const newClient = new AnchorClient(connection, wallet as unknown as Wallet);
+        setClient(newClient);
+      } catch (error) {
+        console.error('Error initializing AnchorClient:', error);
+      }
     } else {
       setClient(null);
     }
   }, [connection, wallet]);
 
-  return { client };
+  return client;
 }

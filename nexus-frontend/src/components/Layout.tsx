@@ -1,7 +1,15 @@
+'use client';
+
 import { FC, ReactNode } from 'react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+// Dynamically import WalletMultiButton with no SSR
+const WalletMultiButton = dynamic(
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+);
 
 interface Props {
   children: ReactNode;
@@ -40,7 +48,9 @@ export const Layout: FC<Props> = ({ children }) => {
                 ))}
               </div>
             </div>
-            <WalletMultiButton />
+            <div className="wallet-button">
+              <WalletMultiButton />
+            </div>
           </div>
           
           {/* Mobile Navigation */}
@@ -59,7 +69,9 @@ export const Layout: FC<Props> = ({ children }) => {
           </div>
         </div>
       </nav>
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      <main className="container mx-auto px-4 py-8">
+        {children}
+      </main>
     </div>
   );
 };

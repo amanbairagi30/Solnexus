@@ -33,8 +33,8 @@ export default function TaskDetailsPage() {
       try {
         const taskPubkey = new PublicKey(taskId);
         const result = await client.getTask(taskPubkey);
-        if (result.success && result.task) {
-          setTask(result.task as unknown as Task);
+        if ((result as any).success && (result as any).task) {
+          setTask((result as any).task as Task);
         }
       } catch (error) {
         console.error("Error fetching task:", error);
@@ -52,17 +52,17 @@ export default function TaskDetailsPage() {
     setSubmitting(true);
     try {
       const taskPubkey = new PublicKey(taskId);
-      const result = await client.completeTask(
+      const result = await (client as any).completeTask(
         taskPubkey,
         task.assignedAgent!,
         resultUri
       );
 
-      if (result.success) {
+      if ((result as any).success) {
         // Refresh task data
         const updatedTask = await client.getTask(taskPubkey);
-        if (updatedTask.success && updatedTask.task) {
-          setTask(updatedTask.task as unknown as Task);
+        if ((updatedTask as any).success && (updatedTask as any).task) {
+          setTask((updatedTask as any).task as Task);
         }
         setResultUri("");
       }

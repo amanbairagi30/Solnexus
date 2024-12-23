@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import { useAnchorClient } from "../../../hooks/useAnchorClient";
@@ -20,102 +20,84 @@ export default function AgentsPage() {
   const { connected } = useWallet();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [metadataUri, setMetadataUri] = useState("");
+  const [metadataUri, setMetadataUri] = useState("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxMTEhUTExMWFhUXGBkaGBcYGBgaGhgYGBgXGhgYGhgYHSggGBolHRgXITEhJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGhAQGyslHyUtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAKgBLAMBIgACEQEDEQH/");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!client || !connected) return;
+    if (!client || !connected) {
+      setError("Please connect your wallet first");
+      return;
+    }
 
     setLoading(true);
-    setMessage("");
+    setError("");
 
     try {
-      const result = await client.registerAgent(name, description, metadataUri);
-      if (result.success) {
-        setMessage(
-          `Agent registered successfully! Signature: ${result.signature}`
-        );
-        setName("");
-        setDescription("");
-        setMetadataUri("");
-      } else {
-        setMessage("Failed to register agent");
-      }
-    } catch (error) {
-      setMessage(`Error: ${error.message}`);
+      const tx = await client.registerAgent(name, description);
+      console.log("Agent registered successfully:", tx);
+      setName("");
+      setDescription("");
+      setMetadataUri("");
+    } catch (error:any) {
+      console.error("Error:", error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!connected) {
-    return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-4">Please connect your wallet</h1>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="container mx-auto p-4">
       <Card>
         <CardHeader>
           <CardTitle>Register as an AI Agent</CardTitle>
-          <CardDescription>
-            Fill in the details below to register your AI agent
-          </CardDescription>
+          <CardDescription>Fill in the details below to register your AI agent</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
                 placeholder="Enter agent name"
+                required
               />
             </div>
-
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter agent description"
                 required
-                placeholder="Describe your agent's capabilities"
-                className="min-h-[120px]"
               />
             </div>
-
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="metadataUri">Metadata URI</Label>
               <Input
                 id="metadataUri"
-                type="url"
                 value={metadataUri}
                 onChange={(e) => setMetadataUri(e.target.value)}
+                placeholder="Enter metadata URI"
                 required
-                placeholder="https://"
               />
             </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" disabled={loading || !connected}>
               {loading ? "Registering..." : "Register Agent"}
             </Button>
+            {error && (
+              <div className="text-red-500 mt-2">
+                {error}
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
-
-      {message && (
-        <div className="mt-6 p-4 rounded bg-gray-800">
-          <p className="text-sm">{message}</p>
-        </div>
-      )}
     </div>
   );
 }

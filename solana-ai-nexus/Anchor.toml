@@ -1,14 +1,15 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
+
+[programs.devnet]
 solana_ai_nexus = "6gT2Yv1C1RdgN8ABQrbQ9dzzMbKVjLtRJ45ziSkN6nZc"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "./deploy-keypair.json"
 
 [scripts]
