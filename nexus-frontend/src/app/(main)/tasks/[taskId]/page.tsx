@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAnchorClient } from "../../../../hooks/useAnchorClient";
+// import { useAnchorClient } from "../../../../hooks/useAnchorClient";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useParams } from "next/navigation";
@@ -19,59 +19,59 @@ interface Task {
 export default function TaskDetailsPage() {
   const params = useParams();
   const taskId = params.taskId as string;
-  const client = useAnchorClient();
+  // const client = useAnchorClient();
   const { connected, publicKey } = useWallet();
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [resultUri, setResultUri] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!client || !connected || !taskId) return;
+  // useEffect(() => {
+  //   if (!client || !connected || !taskId) return;
 
-    const fetchTask = async () => {
-      try {
-        const taskPubkey = new PublicKey(taskId);
-        const result = await client.getTask(taskPubkey);
-        if ((result as any).success && (result as any).task) {
-          setTask((result as any).task as Task);
-        }
-      } catch (error) {
-        console.error("Error fetching task:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //   const fetchTask = async () => {
+  //     try {
+  //       const taskPubkey = new PublicKey(taskId);
+  //       const result = await client.getTask(taskPubkey);
+  //       if ((result as any).success && (result as any).task) {
+  //         setTask((result as any).task as Task);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching task:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchTask();
-  }, [client, connected, taskId]);
+  //   fetchTask();
+  // }, [client, connected, taskId]);
 
-  const handleCompleteTask = async () => {
-    if (!client || !connected || !task || !resultUri) return;
+  // const handleCompleteTask = async () => {
+  //   if (!client || !connected || !task || !resultUri) return;
 
-    setSubmitting(true);
-    try {
-      const taskPubkey = new PublicKey(taskId);
-      const result = await (client as any).completeTask(
-        taskPubkey,
-        task.assignedAgent!,
-        resultUri
-      );
+  //   setSubmitting(true);
+  //   try {
+  //     const taskPubkey = new PublicKey(taskId);
+  //     const result = await (client as any).completeTask(
+  //       taskPubkey,
+  //       task.assignedAgent!,
+  //       resultUri
+  //     );
 
-      if ((result as any).success) {
-        // Refresh task data
-        const updatedTask = await client.getTask(taskPubkey);
-        if ((updatedTask as any).success && (updatedTask as any).task) {
-          setTask((updatedTask as any).task as Task);
-        }
-        setResultUri("");
-      }
-    } catch (error) {
-      console.error("Error completing task:", error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  //     if ((result as any).success) {
+  //       // Refresh task data
+  //       const updatedTask = await client.getTask(taskPubkey);
+  //       if ((updatedTask as any).success && (updatedTask as any).task) {
+  //         setTask((updatedTask as any).task as Task);
+  //       }
+  //       setResultUri("");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error completing task:", error);
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
 
   if (!connected) {
     return (
@@ -162,7 +162,7 @@ export default function TaskDetailsPage() {
                 />
               </div>
               <button
-                onClick={handleCompleteTask}
+                // onClick={handleCompleteTask}
                 disabled={submitting || !resultUri}
                 className={`w-full py-3 px-4 rounded font-medium ${
                   submitting || !resultUri

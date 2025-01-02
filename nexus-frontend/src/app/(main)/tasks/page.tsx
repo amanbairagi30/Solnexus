@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
-import { useAnchorClient } from "../../../hooks/useAnchorClient";
+// import { useAnchorClient } from "../../../hooks/useAnchorClient";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 
 export default function TasksPage() {
   const { wallet, connected } = useWallet();
-  const client = useAnchorClient();
+  // const client = useAnchorClient();
   const [description, setDescription] = useState("");
   const [reward, setReward] = useState("0.1");
   const [deadline, setDeadline] = useState("24");
@@ -28,116 +28,118 @@ export default function TasksPage() {
   const [acceptingTask, setAcceptingTask] = useState(false);
   const [resultUri, setResultUri] = useState("");
 
-  useEffect(() => {
-    if (client && connected) {
-      loadTasks();
-    }
-  }, [client, connected]);
+  // useEffect(() => {
+  //   if (client && connected) {
+  //     loadTasks();
+  //   }
+  // }, [client, connected]);
 
-  const loadTasks = async () => {
-    try {
-      const allTasks = await (client as any).getAllTasks();
-      setTasks(allTasks);
-    } catch (error) {
-      console.error("Error loading tasks:", error);
-    }
-  };
+  // const loadTasks = async () => {
+  //   try {
+  //     const allTasks = await (client as any).getAllTasks();
+  //     setTasks(allTasks);
+  //   } catch (error) {
+  //     console.error("Error loading tasks:", error);
+  //   }
+  // };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!client || !connected) {
-      setCreateTaskError("Please connect your wallet first");
-      return;
-    }
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   if (!client || !connected) {
+  //     setCreateTaskError("Please connect your wallet first");
+  //     return;
+  //   }
 
-    if (!description.trim()) {
-      setCreateTaskError("Please enter a task description");
-      return;
-    }
+  //   if (!description.trim()) {
+  //     setCreateTaskError("Please enter a task description");
+  //     return;
+  //   }
 
-    if (isNaN(parseFloat(reward)) || parseFloat(reward) <= 0) {
-      setCreateTaskError("Please enter a valid reward amount");
-      return;
-    }
+  //   if (isNaN(parseFloat(reward)) || parseFloat(reward) <= 0) {
+  //     setCreateTaskError("Please enter a valid reward amount");
+  //     return;
+  //   }
 
-    if (isNaN(parseInt(deadline)) || parseInt(deadline) <= 0) {
-      setCreateTaskError("Please enter a valid deadline in hours");
-      return;
-    }
+  //   if (isNaN(parseInt(deadline)) || parseInt(deadline) <= 0) {
+  //     setCreateTaskError("Please enter a valid deadline in hours");
+  //     return;
+  //   }
 
-    setLoading(true);
-    setCreateTaskError("");
-    setCreateTaskSuccess("");
+  //   setLoading(true);
+  //   setCreateTaskError("");
+  //   setCreateTaskSuccess("");
 
-    try {
-      const tx = await client.createTask(
-        description.trim(),
-        parseFloat(reward),
-        parseInt(deadline)
-      );
-      setCreateTaskSuccess(`Task created successfully! Transaction: ${tx}`);
-      setDescription("");
-      setReward("0.1");
-      setDeadline("24");
-      await loadTasks(); // Refresh the task list
-    } catch (error) {
-      console.error("Error:", error);
-      setCreateTaskError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     const tx = await client.createTask(
+  //       description.trim(),
+  //       parseFloat(reward),
+  //       parseInt(deadline)
+  //     );
+  //     setCreateTaskSuccess(`Task created successfully! Transaction: ${tx}`);
+  //     setDescription("");
+  //     setReward("0.1");
+  //     setDeadline("24");
+  //     await loadTasks(); // Refresh the task list
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //     setCreateTaskError(error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const handleAcceptTask = async (task: any) => {
-    try {
-      // First, verify wallet connection
-      if (!connected) {
-        throw new Error("Wallet not connected");
-      }
+  // const handleAcceptTask = async (task: any) => {
+  //   try {
+  //     // First, verify wallet connection
+  //     if (!connected) {
+  //       throw new Error("Wallet not connected");
+  //     }
 
-      // Make sure the client is initialized
-      if (!client) {
-        throw new Error("Anchor client not initialized");
-      }
+  //     // Make sure the client is initialized
+  //     if (!client) {
+  //       throw new Error("Anchor client not initialized");
+  //     }
 
-      // Initialize agent if needed
-      await client.initializeAgent();
-      
-      // Accept the task
-      const tx = await client.acceptTask(task.publicKey);
-      console.log("Task accepted:", tx);
-      
-    } catch (error) {
-      console.error("Error accepting task:", error);
-      // Add user-friendly error handling here
-    }
-  };
+  //     // Initialize agent if needed
+  //     await client.initializeAgent();
 
-  const handleCompleteTask = async (task, result) => {
-    if (!client || !connected) {
-      setCreateTaskError("Please connect your wallet first");
-      return;
-    }
+  //     // Accept the task
+  //     const tx = await client.acceptTask(task.publicKey);
+  //     console.log("Task accepted:", tx);
 
-    setLoading(true);
-    try {
-      await client.completeTask(task.publicKey, result);
-      await loadTasks();
-      setCreateTaskSuccess("Task completed successfully!");
-      setSelectedTask(null);
-    } catch (error) {
-      setCreateTaskError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error("Error accepting task:", error);
+  //     // Add user-friendly error handling here
+  //   }
+  // };
+
+  // const handleCompleteTask = async (task, result) => {
+  //   if (!client || !connected) {
+  //     setCreateTaskError("Please connect your wallet first");
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   try {
+  //     await client.completeTask(task.publicKey, result);
+  //     await loadTasks();
+  //     setCreateTaskSuccess("Task completed successfully!");
+  //     setSelectedTask(null);
+  //   } catch (error) {
+  //     setCreateTaskError(error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   if (!connected) {
     return (
       <div className="container mx-auto p-4">
         <Card>
           <CardContent className="p-6">
-            <p className="text-center">Please connect your wallet to create tasks</p>
+            <p className="text-center">
+              Please connect your wallet to create tasks
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -151,7 +153,7 @@ export default function TasksPage() {
           <CardTitle>Create a New Task</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form className="space-y-4">
             <div>
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -216,21 +218,30 @@ export default function TasksPage() {
                   className="p-4 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <h3 className="font-medium">{task.data.description}</h3>
-                  <p className="text-sm text-gray-500">Reward: {task.data.reward / 1e9} SOL</p>
                   <p className="text-sm text-gray-500">
-                    Status: <span className={task.data.completed ? "text-green-500" : "text-blue-500"}>
+                    Reward: {task.data.reward / 1e9} SOL
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Status:{" "}
+                    <span
+                      className={
+                        task.data.completed ? "text-green-500" : "text-blue-500"
+                      }
+                    >
                       {task.data.completed ? "Completed" : "Open"}
                     </span>
                   </p>
                   {!task.data.completed && (
                     <div>
                       <Button
-                        onClick={() => handleAcceptTask(task)}
+                        // onClick={() => handleAcceptTask(task)}
                         disabled={acceptingTasks[taskKey]}
                         variant="secondary"
                         className="mt-2"
                       >
-                        {acceptingTasks[taskKey] ? "Accepting..." : "Accept Task"}
+                        {acceptingTasks[taskKey]
+                          ? "Accepting..."
+                          : "Accept Task"}
                       </Button>
                       {taskErrors[taskKey] && (
                         <div className="mt-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
@@ -259,7 +270,9 @@ export default function TasksPage() {
             </CardHeader>
             <CardContent>
               <p className="mb-4">{selectedTask.data.description}</p>
-              <p className="mb-4">Reward: {selectedTask.data.reward / 1e9} SOL</p>
+              <p className="mb-4">
+                Reward: {selectedTask.data.reward / 1e9} SOL
+              </p>
               {!selectedTask.data.completed && (
                 <div>
                   <Label>Result URI</Label>
@@ -270,7 +283,7 @@ export default function TasksPage() {
                     className="mb-4"
                   />
                   <Button
-                    onClick={() => handleCompleteTask(selectedTask, resultUri)}
+                    // onClick={() => handleCompleteTask(selectedTask, resultUri)}
                     disabled={loading}
                     className="mr-2"
                   >
@@ -278,10 +291,7 @@ export default function TasksPage() {
                   </Button>
                 </div>
               )}
-              <Button
-                variant="outline"
-                onClick={() => setSelectedTask(null)}
-              >
+              <Button variant="outline" onClick={() => setSelectedTask(null)}>
                 Close
               </Button>
             </CardContent>

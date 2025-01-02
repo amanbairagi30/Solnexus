@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cross-env NODE_ENV=production SKIP_TYPE_CHECK=true next build --no-lint",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },

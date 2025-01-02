@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useAnchorClient } from "../../../hooks/useAnchorClient";
+// import { useAnchorClient } from "../../../hooks/useAnchorClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Agent {
@@ -20,44 +20,46 @@ interface Task {
 
 export default function Dashboard() {
   const { connected } = useWallet();
-  const client = useAnchorClient();
+  // const client = useAnchorClient();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!client || !connected) {
-        setLoading(false);
-        return;
-      }
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     // if (!client || !connected) {
+  //     //   setLoading(false);
+  //     //   return;
+  //     // }
 
-      try {
-        const [fetchedAgents, fetchedTasks] = await Promise.all([
-          client.getAllAgents(),
-          client.getAllTasks(),
-        ]);
+  //     try {
+  //       const [fetchedAgents, fetchedTasks] = await Promise.all([
+  //         client.getAllAgents(),
+  //         client.getAllTasks(),
+  //       ]);
 
-        setAgents(fetchedAgents);
-        setTasks(fetchedTasks);
-      } catch (err:any) {
-        console.error("Error fetching data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setAgents(fetchedAgents);
+  //       setTasks(fetchedTasks);
+  //     } catch (err:any) {
+  //       console.error("Error fetching data:", err);
+  //       setError(err.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchData();
-  }, [client, connected]);
+  //   fetchData();
+  // }, [client, connected]);
 
   if (!connected) {
     return (
       <div className="container mx-auto p-4">
         <Card>
           <CardContent className="p-6">
-            <p className="text-center">Please connect your wallet to view the dashboard</p>
+            <p className="text-center">
+              Please connect your wallet to view the dashboard
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -97,7 +99,9 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {agents.length === 0 ? (
-              <p className="text-center text-gray-500">No agents registered yet</p>
+              <p className="text-center text-gray-500">
+                No agents registered yet
+              </p>
             ) : (
               <div className="space-y-4">
                 {agents.map((agent, index) => (
