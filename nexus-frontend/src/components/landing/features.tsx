@@ -12,7 +12,7 @@ import { chip, solana } from "@/images/images";
 
 export default function FeaturesBentoGrid() {
   return (
-    <section className="py-24 mt-80 px-4 md:px-6">
+    <section className="py-24 mt-52 px-4 md:px-6">
       <div className="container mx-auto max-w-6xl">
         <div className="flex flex-col items-center text-center mb-16">
           <div className="bg-primary/10 p-3 rounded-lg mb-4">
